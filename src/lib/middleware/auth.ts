@@ -1,16 +1,29 @@
-// import jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+import { Context, Next } from "koa";
 
-// const JWT_SECRET = process.env.JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET ?? "";
 
-// export const authMiddleware = (ctx) => {
-//   const token = req.headers.authorization?.split(" ")[1];
-//   if (!token) return res.status(401).json({ message: "No token, authorization denied" });
+declare module "koa" {
+  interface DefaultContext {
+    user?: any;
+  }
+}
 
-//   try {
-//     const decoded = jwt.verify(token, JWT_SECRET);
-//     req.user = decoded;
-//     next();
-//   } catch (err) {
-//     res.status(401).json({ message: "Token is not valid" });
-//   }
-// };
+export const authMiddleware = async (ctx: Context, next: Next) => {
+  const token = ctx.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    ctx.status = 401;
+    ctx.body = { message: "No token, authorization denied" };
+    return;
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    ctx.user = decoded; 
+    await next();
+  } catch (err) {
+    ctx.status = 401;
+    ctx.body = { message: "Token is not valid" };
+  }
+};

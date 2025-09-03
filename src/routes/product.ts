@@ -2,10 +2,11 @@ import Router from "@koa/router";
 import { Context } from "koa";
 import { ProductShoma } from "../lib/Type/Shoma";
 import Product from "../models/Product";
+import { authMiddleware } from "../lib/middleware/auth";
 
 const router = new Router({ prefix: "/api/product" });
 
-router.get("/list", async (ctx: Context) => {
+router.get("/list",authMiddleware, async (ctx: Context) => {
   const { skip, limit } = ctx.query;
   if (!skip || !limit)
     return (
