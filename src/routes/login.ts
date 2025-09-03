@@ -1,28 +1,12 @@
 import Router from "@koa/router";
 import { Context } from "koa";
-import { z } from "zod";
 import User from "../models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { createUserSchema, loginSchema, refreshSchema } from "../lib/Type/Shoma";
 
 const router = new Router({ prefix: "/api" });
 const JWT_SECRET = process.env.JWT_SECRET??''
-
-const createUserSchema = z.object({
-  name: z.string().min(1),
-  email: z.string(),
-  age: z.coerce.number().optional(),
-  password: z.string(),
-});
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
-
-const refreshSchema = z.object({
-  refreshToken: z.string(),
-});
 
 
 router.post("/singup", async (ctx: Context) => {
