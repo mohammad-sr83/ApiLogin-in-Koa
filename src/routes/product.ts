@@ -6,7 +6,7 @@ import { authMiddleware } from "../lib/middleware/auth";
 
 const router = new Router({ prefix: "/api/product" });
 
-router.get("/list",authMiddleware, async (ctx: Context) => {
+router.get("/list", async (ctx: Context) => {
   const { skip, limit } = ctx.query;
   if (!skip || !limit)
     return (
@@ -21,6 +21,40 @@ router.get("/list",authMiddleware, async (ctx: Context) => {
   ctx.status = 201;
   ctx.body = { data: { data: pageProduct, massege: "your products" } };
 });
+
+router.get("/filter", authMiddleware, async (ctx: Context) => {
+  const { name, category, minPrice, maxPrice } = ctx.query;
+  const filter: any = {};
+
+  if (name) {
+    filter.name = { $regex: name, $options: "i" };
+  }
+
+  if (category) {
+    filter.category = category;
+  }
+
+  if (minPrice || maxPrice) {
+    filter.price = {};
+    if (minPrice) filter.price.$gte = Number(minPrice);
+    if (maxPrice) filter.price.$lte = Number(maxPrice);
+  }
+
+  try {
+    const filteredProducts = await Product.find(filter);
+
+    ctx.status = 200;
+    ctx.body = {
+      data: filteredProducts,
+      total: filteredProducts.length,
+      message: "filtered products shop",
+    };
+  } catch (err) {
+    ctx.status = 500;
+    ctx.body = { message: "can not find filter", error: err };
+  }
+});
+
 
 router.patch("/edit/:id", async (ctx: Context) => {
   const { id } = ctx.params;

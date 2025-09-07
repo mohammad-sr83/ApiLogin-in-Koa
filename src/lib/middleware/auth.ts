@@ -3,9 +3,14 @@ import { Context, Next } from "koa";
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "";
 
+interface JwtPayload {
+  id: string;
+  email: string;
+}
+
 declare module "koa" {
-  interface DefaultContext {
-    user?: any;
+  interface DefaultState {
+    user?: JwtPayload;
   }
 }
 
@@ -14,16 +19,16 @@ export const authMiddleware = async (ctx: Context, next: Next) => {
 
   if (!token) {
     ctx.status = 401;
-    ctx.body = { message: "No token, authorization denied" };
+    ctx.body = { success: false, error: "No token, authorization denied" };
     return;
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    ctx.user = decoded; 
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    ctx.state.user = decoded;
     await next();
   } catch (err) {
     ctx.status = 401;
-    ctx.body = { message: "Token is not valid" };
+    ctx.body = { success: false, error: "Token is not valid" };
   }
 };
